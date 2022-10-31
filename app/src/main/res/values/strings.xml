@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GiphyGallery</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="search">search</string>
+    <string name="retry">retry</string>
+    <string name="no_results">no results</string>
+    <string name="empty">EMPTY</string>
+</resources>

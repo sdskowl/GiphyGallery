@@ -1,0 +1,13 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+kotlin {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+dependencies {
+    implementation("androidx.paging:paging-common:$pagingVersion")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+}

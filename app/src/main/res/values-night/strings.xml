@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search">search</string>
+    <string name="retry">retry</string>
+    <string name="no_results">no results</string>
+    <string name="empty">EMPTY</string>
+</resources>

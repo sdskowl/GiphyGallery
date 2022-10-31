@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="numberSize">32sp</dimen>
+    <dimen name="inputMargin">8dp</dimen>
+    <dimen name="errorMsg">16sp</dimen>
+</resources>
