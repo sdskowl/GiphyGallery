@@ -1,20 +1,20 @@
-It's simple project to see gifs from giphy.com
+It's simple project to see gifs from giphy.com</br>
+![](https://github.com/sdskowl/GiphyGallery/blob/master/sample.gif)</br>
+Stack:</br>
+Clean architecture</br>
+Modularization</br>
+MVVM</br>
+Dependency injection (Hilt)</br>
+Retrofit2</br>
+Glide</br>
+Paging 3</br>
+Room</br>
+Navigation component</br>
+Single activity</br>
 
-Stack:
-Clean architecture
-Modularization
-MVVM
-Dependency injection (Hilt)
-Retrofit2
-Glide
-Paging 3
-Room
-Navigation component
-Single activity
+How to use:</br>
+Put your API key into local.properties file like this API_KEY=<your key></br>
 
-How to use:
-Put your API key into local.properties file like this API_KEY=<your key>
-
-bugs:
--in AVD recycler can loose views after new query. 
+bugs:</br>
+-in AVD recycler can loose views after new query.</br> 
 
