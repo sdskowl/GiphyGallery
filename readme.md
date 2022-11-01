@@ -15,6 +15,5 @@ Single activity</br>
 How to use:</br>
 Put your API key into local.properties file like this API_KEY="your key"</br>
 
-bugs:</br>
--in AVD recycler can loose views after new query.</br> 
+
 

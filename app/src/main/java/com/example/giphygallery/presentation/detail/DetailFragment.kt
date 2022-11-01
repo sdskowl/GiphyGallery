@@ -72,35 +72,37 @@ class DetailFragment : Fragment() {
         pagingData: Flow<PagingData<UiModel>>
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                pagingData.collectLatest {
-                    gifsAdapter.submitData(it)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                launch {
+                    pagingData.collectLatest {
+                        gifsAdapter.submitData(it)
+                    }
                 }
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                gifsAdapter.loadStateFlow.collect { loadState ->
-                    val isListEmpty =
-                        loadState.refresh is LoadState.NotLoading && loadState.append is LoadState.NotLoading && gifsAdapter.itemCount == 0 && loadState.prepend is LoadState.NotLoading
-                    if (!isListEmpty) {
-                        if (firstStart) {
-                            binding.listGifs.setCurrentItem(args.position, false)
-                            firstStart = false
+
+                launch {
+                    gifsAdapter.loadStateFlow.collect { loadState ->
+                        val isListEmpty =
+                            loadState.refresh is LoadState.NotLoading && loadState.append is LoadState.NotLoading && gifsAdapter.itemCount == 0 && loadState.prepend is LoadState.NotLoading
+                        if (!isListEmpty) {
+                            if (firstStart) {
+                                binding.listGifs.setCurrentItem(args.position, false)
+                                firstStart = false
+                            }
+                        }
+                        val errorState = loadState.source.append as? LoadState.Error
+                            ?: loadState.source.prepend as? LoadState.Error
+                            ?: loadState.append as? LoadState.Error
+                            ?: loadState.prepend as? LoadState.Error
+                        errorState?.let {
+                            Toast.makeText(
+                                requireContext(),
+                                "\uD83D\uDE28 Wooops ${it.error}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
-                    val errorState = loadState.source.append as? LoadState.Error
-                        ?: loadState.source.prepend as? LoadState.Error
-                        ?: loadState.append as? LoadState.Error
-                        ?: loadState.prepend as? LoadState.Error
-                    errorState?.let {
-                        Toast.makeText(
-                            requireContext(),
-                            "\uD83D\uDE28 Wooops ${it.error}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
                 }
+
             }
         }
     }
