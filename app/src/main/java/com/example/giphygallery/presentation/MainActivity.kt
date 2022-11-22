@@ -15,14 +15,15 @@ class MainActivity : AppCompatActivity() {
     private val binding: ActivityMainBinding by lazy(LazyThreadSafetyMode.NONE) {
         ActivityMainBinding.inflate(layoutInflater)
     }
-    private lateinit var navController: NavController
+    private val navController: NavController by lazy(LazyThreadSafetyMode.NONE) {
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        navHostFragment.navController
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-        navController = navHostFragment.navController
         setupActionBarWithNavController(navController)
     }
 

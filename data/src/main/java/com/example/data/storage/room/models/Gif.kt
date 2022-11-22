@@ -9,5 +9,5 @@ data class Gif(
     val originalUrl: String,
     val smallUrl: String,
     val searchWords: String,
-    var hide:Boolean
+    var hide: Boolean
 )

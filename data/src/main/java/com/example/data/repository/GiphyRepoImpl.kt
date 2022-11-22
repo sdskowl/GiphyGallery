@@ -5,8 +5,6 @@ import androidx.paging.*
 import com.example.data.network.GiphyService
 import com.example.data.pagination.GiphyRemoteMediator
 import com.example.data.storage.room.AppDb
-import com.example.data.storage.room.GiphyDao
-import com.example.data.storage.room.RemoteKeysDao
 import com.example.data.storage.room.models.Gif
 import com.example.data.storage.room.models.GifHide
 import com.example.data.storage.sh_prefs.SPrefStorageInterface
@@ -15,40 +13,29 @@ import com.example.domain.models.UiAction
 import com.example.domain.models.UiModel
 import com.example.domain.models.UiState
 import com.example.domain.repository.GiphyRepo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 
 class GiphyRepoImpl(
-    private val giphyDao: GiphyDao,
-    private val remoteKeysDao: RemoteKeysDao,
     private val giphyService: GiphyService,
     private val sPrefStorage: SPrefStorageInterface,
     private val appDb: AppDb
 ) : GiphyRepo {
     private val TAG: String = "GiphyRepoImpl"
-    val scope = CoroutineScope(Dispatchers.IO)
-    val initialQuery: String = sPrefStorage.getQuerySearch()
-    val lastQueryScrolled: String = sPrefStorage.getLastQuerySearch()
-    val actionStateFlow = MutableSharedFlow<UiAction>()
+    private val initialQuery: String = sPrefStorage.getQuerySearch()
+    private val lastQueryScrolled: String = sPrefStorage.getLastQuerySearch()
+    private val actionStateFlow = MutableSharedFlow<UiAction>()
+
     //here we make new query
-    val searches: Flow<UiAction.Search> = actionStateFlow
+    private val searches: Flow<UiAction.Search> = actionStateFlow
         .filterIsInstance<UiAction.Search>()
         .distinctUntilChanged()
         .onStart { emit(UiAction.Search(query = initialQuery)) }
+
     //just for scrolling up
-    val queriesScrolled = actionStateFlow
+    private val queriesScrolled = actionStateFlow
         .filterIsInstance<UiAction.Scroll>()
         .distinctUntilChanged()
-        // This is shared to keep the flow "hot" while caching the last query scrolled,
-        // otherwise each flatMapLatest invocation would lose the last query scrolled,
-        .shareIn(
-            scope = scope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-            replay = 1
-        )
         .onStart { emit(UiAction.Scroll(currentQuery = lastQueryScrolled)) }
 
     /**
@@ -57,15 +44,13 @@ class GiphyRepoImpl(
     override fun searchGifs(query: String): Flow<PagingData<GifDomain>> {
         Log.d(TAG, "new query $query")
         val dbQuery = "%${query.replace(' ', '%')}%"
-        val pagingSourceFactory = { giphyDao.gifBySearchHistory(dbQuery) }
+        val pagingSourceFactory = { appDb.giphyDao().gifBySearchHistory(dbQuery) }
         @OptIn(ExperimentalPagingApi::class)
         return Pager(
             config = PagingConfig(pageSize = 25, enablePlaceholders = true),
             remoteMediator = GiphyRemoteMediator(
                 query = query,
                 service = giphyService,
-                giphyDao = giphyDao,
-                remoteKeysDao = remoteKeysDao,
                 appDb = appDb
             ),
             pagingSourceFactory = pagingSourceFactory
@@ -97,8 +82,8 @@ class GiphyRepoImpl(
     /**
      * Here we only send action to query new search.
      * */
-    override fun startAction(action: UiAction) {
-        CoroutineScope(Dispatchers.Main).launch { actionStateFlow.emit(action) }
+    override suspend fun startAction(action: UiAction) {
+        actionStateFlow.emit(action)
     }
 
     /**
@@ -120,14 +105,15 @@ class GiphyRepoImpl(
             )
         }
     }
+
     /**
      * To hide from recycler we change here property hide from model in DB and also add to hiding list in DB
      * */
     override suspend fun hideGif(gif: GifDomain) {
-        giphyDao.addGifToHideList(
-           gif = GifHide(id = gif.id)
+        appDb.giphyDao().addGifToHideList(
+            gif = GifHide(id = gif.id)
         )
-        giphyDao.hideGifInCurrentData(gif = gif.mapToData().apply { hide = true })
+        appDb.giphyDao().hideGifInCurrentData(gif = gif.mapToData().apply { hide = true })
     }
 
     private fun GifDomain.mapToData(): Gif = Gif(

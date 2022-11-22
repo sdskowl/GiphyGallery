@@ -9,11 +9,8 @@ import androidx.room.withTransaction
 import com.example.data.network.GiphyService
 import com.example.data.network.models.GiphyData
 import com.example.data.storage.room.AppDb
-import com.example.data.storage.room.GiphyDao
-import com.example.data.storage.room.RemoteKeysDao
 import com.example.data.storage.room.models.Gif
 import com.example.data.storage.room.models.RemoteKeys
-import com.haroldadmin.cnradapter.NetworkResponse
 import com.haroldadmin.cnradapter.invoke
 import java.io.IOException
 
@@ -24,8 +21,6 @@ class GiphyRemoteMediator(
     private var startPage: Int = 0,
     private val query: String,
     private val service: GiphyService,
-    private val giphyDao: GiphyDao,
-    private val remoteKeysDao: RemoteKeysDao,
     private val appDb: AppDb
 ) : RemoteMediator<Int, Gif>() {
     override suspend fun initialize(): InitializeAction {
@@ -69,8 +64,8 @@ class GiphyRemoteMediator(
             val endOfPaginationReached = giphyData.isEmpty()
             appDb.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    remoteKeysDao.clearRemoteKeys()
-                    giphyDao.clearGifs()
+                    appDb.remoteKeysDao().clearRemoteKeys()
+                    appDb.giphyDao().clearGifs()
                 }
                 val prevKey = if (page == startPage) null else page - 1
                 val nextKey = if (endOfPaginationReached) null else page + 1
@@ -89,11 +84,11 @@ class GiphyRemoteMediator(
                             originalUrl = it.images?.original?.url!!.trim(),
                             smallUrl = it.images.fixedWidth?.url!!.trim(),
                             searchWords = query,
-                            hide = giphyDao.findHidden(it.id) != null
+                            hide = appDb.giphyDao().findHidden(it.id) != null
                         )
                     }
-                remoteKeysDao.insertAll(keys)
-                giphyDao.insertAll(dataDb)
+                appDb.remoteKeysDao().insertAll(keys)
+                appDb.giphyDao().insertAll(dataDb)
             }
 
 
@@ -109,7 +104,7 @@ class GiphyRemoteMediator(
 
     private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, Gif>): RemoteKeys? {
         return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()?.let { gif ->
-            appDb.withTransaction { remoteKeysDao.remoteKeysGifId(gif.id) }
+            appDb.withTransaction { appDb.remoteKeysDao().remoteKeysGifId(gif.id) }
         }
     }
 
@@ -119,7 +114,7 @@ class GiphyRemoteMediator(
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
             ?.let { gif ->
                 // Get the remote keys of the first items retrieved
-                appDb.withTransaction { remoteKeysDao.remoteKeysGifId(gif.id) }
+                appDb.withTransaction { appDb.remoteKeysDao().remoteKeysGifId(gif.id) }
             }
     }
 
@@ -130,7 +125,7 @@ class GiphyRemoteMediator(
         // Get the item closest to the anchor position
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.let { gif ->
-                appDb.withTransaction { remoteKeysDao.remoteKeysGifId(gif.id) }
+                appDb.withTransaction { appDb.remoteKeysDao().remoteKeysGifId(gif.id) }
             }
         }
     }

@@ -29,11 +29,11 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/numberSize"
         android:background="#FFFFFF"
-        tools:text="TextView"
+        android:textSize="@dimen/numberSize"
         app:layout_constraintStart_toStartOf="@+id/gifView"
-        app:layout_constraintTop_toTopOf="@+id/gifView" />
+        app:layout_constraintTop_toTopOf="@+id/gifView"
+        tools:text="TextView" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

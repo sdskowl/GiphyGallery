@@ -18,7 +18,6 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.example.domain.models.UiAction
 import com.example.domain.models.UiModel
 import com.example.domain.models.UiState
 import com.example.giphygallery.R
@@ -34,7 +33,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
-    private val TAG = "MAINFRAGMENT"
+
     private val vm: SharedViewModel by hiltNavGraphViewModels(R.id.navigation)
     private val binding: FragmentMainBinding by lazy(LazyThreadSafetyMode.NONE) {
         FragmentMainBinding.inflate(layoutInflater)
@@ -51,22 +50,19 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.bindState(
             uiState = vm.state,
-            pagingData = vm.pagingDataFlow,
-            uiActions = vm.accept
+            pagingData = vm.pagingDataFlow
         )
 
     }
 
     private fun FragmentMainBinding.bindState(
         uiState: StateFlow<UiState>,
-        pagingData: Flow<PagingData<UiModel>>,
-        uiActions: (UiAction) -> Unit,
+        pagingData: Flow<PagingData<UiModel>>
     ) {
         val gifsAdapter =
             GifsAdapter({ gif -> vm.hideGif(gif) }, { position -> gifClick(position) })
         val header = GifsLoadStateAdapter { gifsAdapter.retry() }
         val footer = GifsLoadStateAdapter { gifsAdapter.retry() }
-        // val manager = LinearLayoutManager(binding.root.context, LinearLayoutManager.VERTICAL, false)
         val manager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         listGifs.layoutManager = manager
         listGifs.adapter = gifsAdapter.withLoadStateHeaderAndFooter(
@@ -74,31 +70,28 @@ class MainFragment : Fragment() {
             footer = footer
         )
         bindSearch(
-            uiState = uiState,
-            onQueryChanged = uiActions
+            uiState = uiState
         )
         bindList(
             header = header,
             gifsAdapter = gifsAdapter,
             uiState = uiState,
-            pagingData = pagingData,
-            onScrollChanged = uiActions
+            pagingData = pagingData
         )
     }
 
     private fun gifClick(position: Int) {
-        vm.accept.invoke(UiAction.Scroll(vm.state.value.query))
+        vm.saveScroll()
         val directions = MainFragmentDirections.actionMainFragmentToDetailFragment(position)
         findNavController().navigate(directions)
     }
 
     private fun FragmentMainBinding.bindSearch(
-        uiState: StateFlow<UiState>,
-        onQueryChanged: (UiAction.Search) -> Unit
+        uiState: StateFlow<UiState>
     ) {
         searchGifs.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) {
-                updateGifsListFromInput(onQueryChanged)
+                updateGifsListFromInput()
                 true
             } else {
                 false
@@ -106,7 +99,7 @@ class MainFragment : Fragment() {
         }
         searchGifs.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                updateGifsListFromInput(onQueryChanged)
+                updateGifsListFromInput()
                 true
             } else {
                 false
@@ -127,8 +120,7 @@ class MainFragment : Fragment() {
         header: GifsLoadStateAdapter,
         gifsAdapter: GifsAdapter,
         uiState: StateFlow<UiState>,
-        pagingData: Flow<PagingData<UiModel>>,
-        onScrollChanged: (UiAction.Scroll) -> Unit
+        pagingData: Flow<PagingData<UiModel>>
     ) {
         val notLoading = gifsAdapter.loadStateFlow
             .asRemotePresentationState()
@@ -149,7 +141,7 @@ class MainFragment : Fragment() {
         listGifs.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (dy != 0) {
-                    onScrollChanged(UiAction.Scroll(currentQuery = uiState.value.query))
+                    vm.saveScroll()
                 }
             }
         })
@@ -201,7 +193,7 @@ class MainFragment : Fragment() {
                 launch {
                     shouldScrollToTop.collect { shouldScroll ->
                         if (shouldScroll) {
-                            listGifs.scrollTo(0,0)
+                            listGifs.scrollTo(0, 0)
                         }
                     }
                 }
@@ -215,10 +207,10 @@ class MainFragment : Fragment() {
     /**
      * This fun we use to send new query to our repository
      * */
-    private fun FragmentMainBinding.updateGifsListFromInput(onQueryChanged: (UiAction.Search) -> Unit) {
+    private fun FragmentMainBinding.updateGifsListFromInput() {
         searchGifs.text?.trim()?.let {
             if (it.isNotEmpty()) {
-                onQueryChanged(UiAction.Search(query = it.toString()))
+                vm.query(it.toString())
             }
         }
     }

@@ -13,6 +13,7 @@ import com.example.giphygallery.R
 import com.example.giphygallery.databinding.GifItemDetailBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class GifsDetailViewHolder(private val binding: GifItemDetailBinding) :
@@ -21,11 +22,10 @@ class GifsDetailViewHolder(private val binding: GifItemDetailBinding) :
     private var errorLoad = false
     private var countTry = 0
     private val requestManager = Glide.with(binding.root)
-
+    private val scope = CoroutineScope(Dispatchers.Main)
     fun bind(gif: GifDomain?) {
         currentGif = gif
-        gif?.let { g ->
-
+        gif?.let {
             loadImage()
             binding.gifView.setOnClickListener {
                 if (errorLoad) {
@@ -51,7 +51,7 @@ class GifsDetailViewHolder(private val binding: GifItemDetailBinding) :
                     ): Boolean {
                         if (countTry < 3) {
                             countTry++
-                            CoroutineScope(Dispatchers.Main).launch {
+                            scope.launch {
                                 loadImage()
                             }
                         } else {
@@ -83,6 +83,10 @@ class GifsDetailViewHolder(private val binding: GifItemDetailBinding) :
             }
 
         }
+    }
+
+    fun cancelScope() {
+        scope.cancel()
     }
 
     companion object {

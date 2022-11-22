@@ -3,7 +3,6 @@ package com.example.data.network
 import com.example.data.BuildConfig
 import com.example.data.network.models.GiphyData
 import com.haroldadmin.cnradapter.NetworkResponse
-import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 

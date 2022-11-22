@@ -6,8 +6,6 @@ import androidx.room.Room
 import com.example.data.network.GiphyService
 import com.example.data.repository.GiphyRepoImpl
 import com.example.data.storage.room.AppDb
-import com.example.data.storage.room.GiphyDao
-import com.example.data.storage.room.RemoteKeysDao
 import com.example.data.storage.sh_prefs.SPrefStorageImpl
 import com.example.data.storage.sh_prefs.SPrefStorageInterface
 import com.example.domain.repository.GiphyRepo
@@ -65,22 +63,12 @@ class DataModule {
 
     @Provides
     @Singleton
-    fun provideGiphyDao(appDb: AppDb): GiphyDao = appDb.giphyDao()
-
-    @Provides
-    @Singleton
-    fun provideRemoteKeysDao(appDb: AppDb): RemoteKeysDao = appDb.remoteKeysDao()
-
-    @Provides
-    @Singleton
     fun provideGiphyRepo(
-        giphyDao: GiphyDao,
-        remoteKeysDao: RemoteKeysDao,
         giphyService: GiphyService,
         sPrefStorage: SPrefStorageInterface,
         appDb: AppDb
     ): GiphyRepo = GiphyRepoImpl(
-        giphyDao, remoteKeysDao, giphyService, sPrefStorage, appDb
+        giphyService, sPrefStorage, appDb
     )
 
     @Provides
